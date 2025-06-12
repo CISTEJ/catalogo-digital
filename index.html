@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo Digital de Productos</title>
+    
+    <!-- Tailwind CSS para un diseño moderno y adaptable -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Biblioteca SheetJS (xlsx.js) para leer archivos de Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Google Fonts: Inter para una tipografía limpia -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Estilo personalizado para usar la fuente Inter */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Estilo para el botón de carga de archivo */
+        .file-input-button {
+            cursor: pointer;
+            padding: 0.75rem 1.5rem;
+            background-color: #4f46e5;
+            color: white;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s;
+            display: inline-flex;
+            align-items: center;
+        }
+        .file-input-button:hover {
+            background-color: #4338ca;
+        }
+        /* Ocultar el input de archivo por defecto */
+        #file-upload {
+            display: none;
+        }
+        /* Clase para ocultar elementos de forma idiomática con Tailwind */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- ===== VISTA DE ADMINISTRADOR (Visible por defecto) ===== -->
+        <div id="admin-view">
+            <header class="text-center mb-8">
+                <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Panel de Administrador</h1>
+                <p class="text-md text-gray-600 mt-2">Cargue el archivo de productos para activar el catálogo público.</p>
+            </header>
+            <div class="bg-white p-8 rounded-lg shadow-md max-w-lg mx-auto text-center">
+                 <label for="file-upload" class="file-input-button font-semibold">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    Seleccionar archivo Excel
+                </label>
+                <input type="file" id="file-upload" accept=".xlsx, .xls">
+                <p id="upload-status" class="mt-4 text-sm text-gray-500">Esperando archivo...</p>
+            </div>
+        </div>
+
+        <!-- ===== VISTA DE CLIENTE (Oculta por defecto) ===== -->
+        <div id="client-view" class="hidden">
+            <header class="text-center mb-8">
+                <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Catálogo Digital de Productos</h1>
+                <p class="text-md text-gray-600 mt-2">Explore nuestros productos disponibles.</p>
+            </header>
+
+            <!-- Barra de Búsqueda -->
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8 sticky top-4 z-10">
+                <div class="relative w-full">
+                    <input type="text" id="search-input" placeholder="Buscar producto por descripción..." class="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                     <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Lista de Productos -->
+            <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Las tarjetas de producto se insertarán aquí dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Referencias a los elementos del DOM
+        const adminView = document.getElementById('admin-view');
+        const clientView = document.getElementById('client-view');
+        const fileUpload = document.getElementById('file-upload');
+        const uploadStatus = document.getElementById('upload-status');
+        const productListContainer = document.getElementById('product-list');
+        const searchInput = document.getElementById('search-input');
+        
+        let allProducts = []; // Almacenará todos los productos del Excel
+
+        // --- Manejador de carga de archivo ---
+        fileUpload.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            // Actualiza el estado en la vista de administrador
+            uploadStatus.textContent = 'Procesando archivo...';
+            uploadStatus.classList.remove('text-red-600');
+            uploadStatus.classList.add('text-gray-500');
+
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    // Usamos la biblioteca SheetJS para leer el contenido del Excel
+                    const workbook = XLSX.read(data, { type: 'array' });
+
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    
+                    // Convertimos la hoja de cálculo a formato JSON
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                    // Mapeamos los datos del Excel a nuestro objeto de producto
+                    allProducts = jsonData.map(row => ({
+                        sku: String(row['SKU'] || 'N/A'),
+                        description: String(row['DESCRIPCIÓN'] || 'Sin descripción'),
+                        price: Number(row['PRECIO VENTA'] || 0)
+                    }));
+                    
+                    // Renderizamos los productos y cambiamos de vista
+                    renderProducts(allProducts);
+                    switchToClientView();
+
+                } catch (error) {
+                    console.error("Error al procesar el archivo:", error);
+                    uploadStatus.textContent = 'Error: El archivo no tiene el formato correcto.';
+                    uploadStatus.classList.add('text-red-600');
+                }
+            };
+
+            reader.onerror = (error) => {
+                console.error("Error al leer el archivo:", error);
+                uploadStatus.textContent = `Error al leer el archivo.`;
+                uploadStatus.classList.add('text-red-600');
+            };
+
+            reader.readAsArrayBuffer(file);
+        });
+        
+        // --- Función para cambiar a la vista de cliente ---
+        function switchToClientView() {
+            adminView.classList.add('hidden');
+            clientView.classList.remove('hidden');
+        }
+
+        // --- Función para renderizar los productos en la vista ---
+        function renderProducts(products) {
+            productListContainer.innerHTML = ''; // Limpiamos la lista actual
+
+            if (products.length === 0) {
+                 productListContainer.innerHTML = `
+                    <p class="text-center text-gray-500 col-span-full">No se encontraron productos que coincidan con la búsqueda.</p>
+                 `;
+                 return;
+            }
+
+            products.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-300 flex flex-col justify-between';
+                
+                // Formatear el precio a formato de moneda (CLP)
+                const formattedPrice = new Intl.NumberFormat('es-CL', {
+                    style: 'currency',
+                    currency: 'CLP'
+                }).format(product.price);
+
+                productCard.innerHTML = `
+                    <div class="p-5 flex-grow">
+                        <h3 class="text-lg font-semibold text-gray-800" title="${product.description}">${product.description}</h3>
+                    </div>
+                    <div class="p-5 bg-gray-50 text-right">
+                        <span class="text-2xl font-bold text-indigo-600">${formattedPrice}</span>
+                    </div>
+                `;
+                productListContainer.appendChild(productCard);
+            });
+        }
+        
+        // --- Manejador del campo de búsqueda ---
+        searchInput.addEventListener('input', (event) => {
+            const searchTerm = event.target.value.toLowerCase();
+            
+            // Filtramos los productos cuya descripción incluya el término de búsqueda
+            const filteredProducts = allProducts.filter(product => 
+                product.description.toLowerCase().includes(searchTerm)
+            );
+            
+            renderProducts(filteredProducts);
+        });
+
+    </script>
+</body>
+</html>
