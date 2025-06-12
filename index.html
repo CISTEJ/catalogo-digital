@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catálogo Digital de Productos</title>
+    <title>Catálogo Digital de Productos - Farmacia San Lázaro</title>
     
     <!-- Tailwind CSS para un diseño moderno y adaptable -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -17,11 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* Estilo personalizado para usar la fuente Inter */
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        /* Estilo para el botón de carga de archivo */
+        body { font-family: 'Inter', sans-serif; }
         .file-input-button {
             cursor: pointer;
             padding: 0.75rem 1.5rem;
@@ -32,28 +28,26 @@
             display: inline-flex;
             align-items: center;
         }
-        .file-input-button:hover {
-            background-color: #4338ca;
-        }
-        /* Ocultar el input de archivo por defecto */
-        #file-upload {
-            display: none;
-        }
-        /* Clase para ocultar elementos de forma idiomática con Tailwind */
-        .hidden {
-            display: none;
-        }
+        .file-input-button:hover { background-color: #4338ca; }
+        #file-upload { display: none; }
+        .hidden { display: none; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
 
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <!-- Logo de la Empresa -->
+        <div class="text-center mb-8">
+            <img src="https://placehold.co/300x80/eef2ff/4f46e5?text=Farmacia+San+L%C3%A1zaro" 
+                 alt="Logo de Farmacia San Lázaro" 
+                 class="mx-auto rounded-lg">
+        </div>
 
         <!-- ===== VISTA DE ADMINISTRADOR (Visible por defecto) ===== -->
         <div id="admin-view">
-            <header class="text-center mb-8">
+            <header class="text-center mb-4">
                 <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Panel de Administrador</h1>
-                <p class="text-md text-gray-600 mt-2">Cargue el archivo de productos para activar el catálogo público.</p>
+                <p class="text-md text-gray-600 mt-2">Cargue el archivo de productos para generar el enlace del catálogo.</p>
             </header>
             <div class="bg-white p-8 rounded-lg shadow-md max-w-lg mx-auto text-center">
                  <label for="file-upload" class="file-input-button font-semibold">
@@ -64,80 +58,116 @@
                 </label>
                 <input type="file" id="file-upload" accept=".xlsx, .xls">
                 <p id="upload-status" class="mt-4 text-sm text-gray-500">Esperando archivo...</p>
+                
+                <!-- Sección para mostrar el enlace generado -->
+                <div id="link-container" class="hidden mt-6 text-left">
+                    <label for="shareable-link" class="block text-sm font-medium text-gray-700">Enlace para Clientes:</label>
+                    <div class="mt-1 flex rounded-md shadow-sm">
+                        <input type="text" id="shareable-link" readonly class="focus:ring-indigo-500 focus:border-indigo-500 flex-1 block w-full rounded-none rounded-l-md sm:text-sm border-gray-300 p-2 bg-gray-100">
+                        <button id="copy-button" class="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 hover:bg-gray-100">
+                           Copiar
+                        </button>
+                    </div>
+                    <p class="mt-2 text-sm text-green-600">¡Enlace generado! Cópialo y compártelo con tus clientes.</p>
+                </div>
             </div>
         </div>
 
         <!-- ===== VISTA DE CLIENTE (Oculta por defecto) ===== -->
         <div id="client-view" class="hidden">
-            <header class="text-center mb-8">
+            <header class="text-center mb-4">
                 <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Catálogo Digital de Productos</h1>
-                <p class="text-md text-gray-600 mt-2">Explore nuestros productos disponibles.</p>
+                 <p id="last-updated" class="text-sm text-gray-500 mt-2"></p>
             </header>
 
-            <!-- Barra de Búsqueda -->
             <div class="bg-white p-6 rounded-lg shadow-md mb-8 sticky top-4 z-10">
                 <div class="relative w-full">
                     <input type="text" id="search-input" placeholder="Buscar producto por descripción..." class="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
-                     <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-                    </svg>
+                     <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
                 </div>
             </div>
-
-            <!-- Lista de Productos -->
-            <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                <!-- Las tarjetas de producto se insertarán aquí dinámicamente -->
-            </div>
+            <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
         </div>
     </div>
 
     <script>
-        // Referencias a los elementos del DOM
         const adminView = document.getElementById('admin-view');
         const clientView = document.getElementById('client-view');
         const fileUpload = document.getElementById('file-upload');
         const uploadStatus = document.getElementById('upload-status');
         const productListContainer = document.getElementById('product-list');
         const searchInput = document.getElementById('search-input');
+        const linkContainer = document.getElementById('link-container');
+        const shareableLinkInput = document.getElementById('shareable-link');
+        const copyButton = document.getElementById('copy-button');
+        const lastUpdatedEl = document.getElementById('last-updated');
         
-        let allProducts = []; // Almacenará todos los productos del Excel
+        let allProducts = [];
+
+        // --- Al cargar la página, revisa si hay datos en la URL ---
+        window.onload = function() {
+            try {
+                const hash = window.location.hash.substring(1);
+                if (hash) {
+                    const decodedString = atob(hash);
+                    const data = JSON.parse(decodedString);
+                    if (data.products && data.date) {
+                        allProducts = data.products;
+                        displayClientView(data.date);
+                    }
+                }
+            } catch (error) {
+                console.error("No se pudieron cargar los datos de la URL:", error);
+                // Si hay un error, se muestra la vista de administrador por defecto.
+            }
+        };
+        
+        // --- Prepara la vista del cliente y la muestra ---
+        function displayClientView(isoDateString) {
+            const date = new Date(isoDateString);
+            const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            lastUpdatedEl.textContent = `Última modificación: ${date.toLocaleDateString('es-CL', options)}`;
+            
+            renderProducts(allProducts);
+            adminView.classList.add('hidden');
+            clientView.classList.remove('hidden');
+        }
 
         // --- Manejador de carga de archivo ---
         fileUpload.addEventListener('change', (event) => {
             const file = event.target.files[0];
-            if (!file) {
-                return;
-            }
+            if (!file) return;
 
-            // Actualiza el estado en la vista de administrador
             uploadStatus.textContent = 'Procesando archivo...';
             uploadStatus.classList.remove('text-red-600');
-            uploadStatus.classList.add('text-gray-500');
+            linkContainer.classList.add('hidden');
 
             const reader = new FileReader();
-
             reader.onload = (e) => {
                 try {
-                    const data = new Uint8Array(e.target.result);
-                    // Usamos la biblioteca SheetJS para leer el contenido del Excel
-                    const workbook = XLSX.read(data, { type: 'array' });
-
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    
-                    // Convertimos la hoja de cálculo a formato JSON
+                    const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
                     const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-                    // Mapeamos los datos del Excel a nuestro objeto de producto
-                    allProducts = jsonData.map(row => ({
+                    const products = jsonData.map(row => ({
                         sku: String(row['SKU'] || 'N/A'),
                         description: String(row['DESCRIPCIÓN'] || 'Sin descripción'),
                         price: Number(row['PRECIO VENTA'] || 0)
                     }));
                     
-                    // Renderizamos los productos y cambiamos de vista
-                    renderProducts(allProducts);
-                    switchToClientView();
+                    // --- Generación del Enlace Compartible ---
+                    const dataToStore = {
+                        date: new Date().toISOString(),
+                        products: products
+                    };
+                    const jsonString = JSON.stringify(dataToStore);
+                    const encodedData = btoa(jsonString); // Codificar a Base64
+                    
+                    const shareableLink = `${window.location.origin}${window.location.pathname}#${encodedData}`;
+                    
+                    shareableLinkInput.value = shareableLink;
+                    linkContainer.classList.remove('hidden');
+                    uploadStatus.textContent = 'Archivo procesado con éxito.';
 
                 } catch (error) {
                     console.error("Error al procesar el archivo:", error);
@@ -145,43 +175,24 @@
                     uploadStatus.classList.add('text-red-600');
                 }
             };
-
             reader.onerror = (error) => {
-                console.error("Error al leer el archivo:", error);
-                uploadStatus.textContent = `Error al leer el archivo.`;
+                uploadStatus.textContent = 'Error al leer el archivo.';
                 uploadStatus.classList.add('text-red-600');
             };
-
             reader.readAsArrayBuffer(file);
         });
-        
-        // --- Función para cambiar a la vista de cliente ---
-        function switchToClientView() {
-            adminView.classList.add('hidden');
-            clientView.classList.remove('hidden');
-        }
 
-        // --- Función para renderizar los productos en la vista ---
+        // --- Función para renderizar los productos ---
         function renderProducts(products) {
-            productListContainer.innerHTML = ''; // Limpiamos la lista actual
-
+            productListContainer.innerHTML = '';
             if (products.length === 0) {
-                 productListContainer.innerHTML = `
-                    <p class="text-center text-gray-500 col-span-full">No se encontraron productos que coincidan con la búsqueda.</p>
-                 `;
+                 productListContainer.innerHTML = `<p class="text-center text-gray-500 col-span-full">No se encontraron productos.</p>`;
                  return;
             }
-
             products.forEach(product => {
                 const productCard = document.createElement('div');
                 productCard.className = 'bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-300 flex flex-col justify-between';
-                
-                // Formatear el precio a formato de moneda (CLP)
-                const formattedPrice = new Intl.NumberFormat('es-CL', {
-                    style: 'currency',
-                    currency: 'CLP'
-                }).format(product.price);
-
+                const formattedPrice = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(product.price);
                 productCard.innerHTML = `
                     <div class="p-5 flex-grow">
                         <h3 class="text-lg font-semibold text-gray-800" title="${product.description}">${product.description}</h3>
@@ -197,15 +208,17 @@
         // --- Manejador del campo de búsqueda ---
         searchInput.addEventListener('input', (event) => {
             const searchTerm = event.target.value.toLowerCase();
-            
-            // Filtramos los productos cuya descripción incluya el término de búsqueda
-            const filteredProducts = allProducts.filter(product => 
-                product.description.toLowerCase().includes(searchTerm)
-            );
-            
+            const filteredProducts = allProducts.filter(p => p.description.toLowerCase().includes(searchTerm));
             renderProducts(filteredProducts);
         });
-
+        
+        // --- Botón de copiar enlace ---
+        copyButton.addEventListener('click', () => {
+            shareableLinkInput.select();
+            document.execCommand('copy');
+            copyButton.textContent = '¡Copiado!';
+            setTimeout(() => { copyButton.textContent = 'Copiar'; }, 2000);
+        });
     </script>
 </body>
 </html>
